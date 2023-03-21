@@ -11,6 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Data injection from seed 
 builder.Services.AddTransient<Seed>();
+// Wire automapper here with automapper dependencies injection 
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 //Dependencies injection 
 builder.Services.AddScoped<IPokemonRepository, PokemonRepository>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
