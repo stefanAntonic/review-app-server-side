@@ -1,0 +1,58 @@
+using reviewApp.Data;
+using Microsoft.EntityFrameworkCore;
+using reviewApp;
+using reviewApp.Interfaces;
+using reviewApp.Repository;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+
+builder.Services.AddControllers();
+// Data injection from seed 
+builder.Services.AddTransient<Seed>();
+//Dependencies injection 
+builder.Services.AddScoped<IPokemonRepository, PokemonRepository>();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// Konekcija za bazu, ovdje se koristi entity sql server, UseSqlServer je metod iz tog paketa
+builder.Services.AddDbContext<DataContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
+
+
+var app = builder.Build();
+
+// Ovaj kondicional i metod sluze za injektovanje podataka iz seed klase 
+if (args.Length == 1 && args[0].ToLower() == "seeddata")
+{
+    SeedData(app);
+}
+
+void SeedData(IHost app)
+{
+    var scopedFactory = app.Services.GetService<IServiceScopeFactory>();
+    using (var scope = scopedFactory?.CreateScope())
+    {
+        var service = scope.ServiceProvider.GetService<Seed>();
+        service.SeedDataContext();
+    }
+}
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();
