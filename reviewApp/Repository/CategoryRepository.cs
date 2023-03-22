@@ -35,12 +35,12 @@ public class CategoryRepository : ICategoryRepository
 
     public ICollection<Pokemon> GetPokemonByCategory(int categoryId)
     {
-        var pokemon = _context
+        var pokemons = _context
             .Pokemons
             .Where(pokemon1 => pokemon1.PokemonCategories
                 .Any(category => category.CategoryId == categoryId))
             .ToList();
-        return pokemon;
+        return pokemons;
     }
 
     public bool CategoryExists(int id)
