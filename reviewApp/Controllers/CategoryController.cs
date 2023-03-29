@@ -1,4 +1,5 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using reviewApp.Dto;
 using reviewApp.Interfaces;
@@ -75,6 +76,40 @@ public class CategoryController : Controller
         }
 
         return Ok(pokemons);
+    }
+
+    [HttpPost]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    public IActionResult CreateCategory([FromBody] CategoryDto categoryCreate )
+    {
+        if ( categoryCreate == null)
+        {
+            return BadRequest();
+        }
+
+        var category = _categoryRepository.GetCategories()
+            .Where(category1 => category1.Name.Trim().ToLower() == categoryCreate.Name.Trim().ToLower())
+            .FirstOrDefault();
+        if ( category != null) 
+        {
+            ModelState.AddModelError("", "Category already exists");
+            return StatusCode(442, ModelState);
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+
+        var categoryMap = _mapper.Map<Category>(categoryCreate);
+        if (!_categoryRepository.CreateCategory(categoryMap))
+        {
+            ModelState.AddModelError("", "Something went wrong while saving");
+            return StatusCode(500, ModelState);
+        }
+
+        return Ok("Successfully created");
     }
     
 }

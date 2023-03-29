@@ -47,4 +47,21 @@ public class CategoryRepository : ICategoryRepository
     {
         return _context.Categories.Any(category => category.Id == id);
     }
+
+    public bool CreateCategory(Category category)
+    {
+        //Change tracker 
+        //Add, update, modifying
+        //connected vs disconnected 
+        _context
+            .Add(category);
+        return Save();
+    }
+
+    public bool Save()
+    {
+        var saved = _context.SaveChanges();
+        return saved > 0;
+    }
+    
 }
