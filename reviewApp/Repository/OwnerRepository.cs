@@ -57,4 +57,16 @@ public class OwnerRepository : IOwnerRepository
             .Owners
             .Any(owner => owner.Id == id);
     }
+
+    public bool CreateOwner(Owner owner)
+    {
+        _context
+            .Add(owner);
+        return Save();    }
+
+    public bool Save()
+    {
+        var saved = _context.SaveChanges();
+        return saved > 0;
+    }
 }

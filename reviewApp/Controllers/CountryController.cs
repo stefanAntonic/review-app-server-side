@@ -75,7 +75,7 @@ public class CountryController : Controller
     [HttpPost]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
-    public IActionResult CreateCategory([FromBody] CountryDto countryCreate )
+    public IActionResult CreateCountry([FromBody] CountryDto countryCreate )
     {
         if ( countryCreate == null)
         {
