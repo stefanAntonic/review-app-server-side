@@ -1,3 +1,5 @@
+using reviewApp.Models;
+
 namespace reviewApp.Dto;
 
 public class ReviewerDto

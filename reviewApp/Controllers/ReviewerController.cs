@@ -71,6 +71,44 @@ public class ReviewerController : Controller
 
         return Ok(reviews);
     }
+    
+    [HttpPost]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    public IActionResult CreateReviewer([FromBody] ReviewerDto reviewerCreate )
+    {
+        if ( reviewerCreate == null)
+        {
+            return BadRequest();
+        }
+        
+        // ReSharper disable once ReplaceWithSingleCallToFirstOrDefault
+        var owner = _reviewerRepository.GetReviewers()
+            .Where(item =>
+                (item.LastName.Trim().ToLower() == reviewerCreate.LastName.Trim().ToLower()
+                 && 
+                 item.FirstName == reviewerCreate.FirstName))
+            .FirstOrDefault();
+        if ( owner != null) 
+        {
+            ModelState.AddModelError("", "Rewiever already exists");
+            return StatusCode(442, ModelState);
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+
+        var reviewerMap = _mapper.Map<Reviewer>(reviewerCreate);
+        if (!_reviewerRepository.CreateReviewer(reviewerMap))
+        {
+            ModelState.AddModelError("", "Something went wrong while saving");
+            return StatusCode(500, ModelState);
+        }
+
+        return Ok("Successfully created");
+    }
 
 
 }

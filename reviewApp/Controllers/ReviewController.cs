@@ -14,12 +14,19 @@ public class ReviewController : Controller
     private readonly IReviewRepository _reviewRepository;
     private readonly IPokemonRepository _pokemonRepository;
     private readonly IMapper _mapper;
+    private readonly IReviewerRepository _reviewerRepository;
 
-    public ReviewController(IReviewRepository reviewRepository, IPokemonRepository pokemonRepository, IMapper mapper)
+    public ReviewController(
+        IReviewRepository reviewRepository,
+        IPokemonRepository pokemonRepository,
+        IMapper mapper,
+        IReviewerRepository reviewerRepository
+    )
     {
         _reviewRepository = reviewRepository;
         _pokemonRepository = pokemonRepository;
         _mapper = mapper;
+        _reviewerRepository = reviewerRepository;
     }
     
     [HttpGet]
@@ -71,5 +78,33 @@ public class ReviewController : Controller
         }
 
         return Ok(reviews);
+    }
+    
+    [HttpPost]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    public IActionResult CreateCountry([FromQuery] int reviewerId, int pokemonId, [FromBody] ReviewDto reviewCreate )
+    {
+        if ( reviewCreate == null)
+        {
+            return BadRequest();
+        }
+        
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+
+        var reviewMap = _mapper.Map<Review>(reviewCreate);
+        reviewMap.Pokemon = _pokemonRepository.GetPokemon(pokemonId);
+        reviewMap.Reviewer = _reviewerRepository.GetReviewer(reviewerId);
+        
+        if (!_reviewRepository.CreateReview(reviewMap))
+        {
+            ModelState.AddModelError("", "Something went wrong while saving");
+            return StatusCode(500, ModelState);
+        }
+
+        return Ok("Successfully created");
     }
 }
