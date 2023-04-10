@@ -105,4 +105,76 @@ public class CountryController : Controller
 
         return Ok("Successfully created");
     }
+    
+    [HttpPut("{countryId}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public IActionResult UpdateCountry(int countryId, [FromBody] CountryDto countryUpdate )
+    {
+        if ( countryUpdate == null)
+        {
+            return BadRequest(ModelState);
+        }
+
+        if (countryId != countryUpdate.Id)
+        {
+            return BadRequest(ModelState);
+
+        }
+        ;
+        if ( !_countryRepository.CountryExists(countryId))
+        {
+            return NotFound();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+        
+
+        var countryMap = _mapper.Map<Country>(countryUpdate);
+        if (!_countryRepository.UpdateCountry(countryMap))
+        {
+            ModelState.AddModelError("", "Something went wrong while updating.");
+            return StatusCode(500, ModelState);
+        }
+
+        return Ok("Successfully Updated");
+    }
+    
+    [HttpDelete("{countryId}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public IActionResult DeleteCategory(int countryId )
+    {
+        var country = _countryRepository
+            .GetCountries()
+            .Where(country1 => country1.Id == countryId)
+            .FirstOrDefault();
+        ;
+        if (country == null)
+        {
+            return NotFound(ModelState);
+        }            
+        if ( !_countryRepository.CountryExists(countryId))
+        {
+            return NotFound(ModelState);
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+        
+        if (!_countryRepository.DeleteCountry(country))
+        {
+            ModelState.AddModelError("", "Something went wrong while deleting.");
+            return StatusCode(500, ModelState);
+        }
+
+        return Ok("Successfully Deleted");
+    }
 }

@@ -102,7 +102,7 @@ public class OwnerController : Controller
     [HttpPost]
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
-    public IActionResult CreateCountry([FromQuery] int countryId, [FromBody] OwnerDto ownerCreate )
+    public IActionResult CreateOwner([FromQuery] int countryId, [FromBody] OwnerDto ownerCreate )
     {
         if ( ownerCreate == null)
         {
@@ -136,6 +136,79 @@ public class OwnerController : Controller
         }
 
         return Ok("Successfully created");
+    }
+    
+    [HttpPut("{ownerId}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public IActionResult UpdateOwner(int ownerId, [FromQuery] int countryId, [FromBody] OwnerDto ownerUpdate )
+    {
+        if ( ownerUpdate == null)
+        {
+            return BadRequest(ModelState);
+        }
+
+        if (ownerId != ownerUpdate.Id)
+        {
+            return BadRequest(ModelState);
+
+        }
+        ;
+        if ( !_ownerRepository.OwnerExisting(ownerId))
+        {
+            return NotFound();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+        
+
+        var ownerMap = _mapper.Map<Owner>(ownerUpdate);
+        ownerMap.Country = _countryRepository.GetCountry(countryId);
+        if (!_ownerRepository.UpdateOwner(ownerMap))
+        {
+            ModelState.AddModelError("", "Something went wrong while updating.");
+            return StatusCode(500, ModelState);
+        }
+
+        return Ok("Successfully Updated");
+    }
+    
+    [HttpDelete("{ownerId}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public IActionResult DeleteCategory(int ownerId )
+    {
+        var owner = _ownerRepository
+            .GetOwners()
+            .Where(owner1 => owner1.Id == ownerId)
+            .FirstOrDefault();
+        ;
+        if (owner == null)
+        {
+            return NotFound(ModelState);
+        }            
+        if ( !_ownerRepository.OwnerExisting(ownerId))
+        {
+            return NotFound(ModelState);
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+        
+        if (!_ownerRepository.DeleteOwner(owner))
+        {
+            ModelState.AddModelError("", "Something went wrong while deleting.");
+            return StatusCode(500, ModelState);
+        }
+
+        return Ok("Successfully Deleted");
     }
     
 }
