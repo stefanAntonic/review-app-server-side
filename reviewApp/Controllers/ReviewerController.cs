@@ -114,7 +114,7 @@ public class ReviewerController : Controller
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
-    public IActionResult UpdateReviewer(int reviewerId, [FromBody] PokemonDto reviewerUpdate )
+    public IActionResult UpdateReviewer(int reviewerId, [FromBody] ReviewerDto reviewerUpdate )
     {
         if ( reviewerUpdate == null)
         {
