@@ -107,4 +107,105 @@ public class ReviewController : Controller
 
         return Ok("Successfully created");
     }
+    
+    [HttpPut("{reviewId}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public IActionResult UpdateReview(int reviewId, [FromBody] PokemonDto reviewUpdate )
+    {
+        if ( reviewUpdate == null)
+        {
+            return BadRequest(ModelState);
+        }
+
+        if (reviewId != reviewUpdate.Id)
+        {
+            return BadRequest(ModelState);
+
+        }
+        ;
+        if ( !_reviewRepository.ReviewExists(reviewId))
+        {
+            return NotFound();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+        
+
+        var reviewMap = _mapper.Map<Review>(reviewUpdate);
+        if (!_reviewRepository.UpdateReview(reviewMap))
+        {
+            ModelState.AddModelError("", "Something went wrong while updating.");
+            return StatusCode(500, ModelState);
+        }
+
+        return Ok("Successfully Updated");
+    }
+    
+    [HttpDelete("{reviewId}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public IActionResult DeleteReview(int reviewId )
+    {
+        var review = _reviewRepository
+            .GetReview(reviewId);
+        ;
+        if (review == null)
+        {
+            return NotFound(ModelState);
+        }            
+        if ( !_reviewRepository.ReviewExists(reviewId))
+        {
+            return NotFound(ModelState);
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+        
+        if (!_reviewRepository.DeleteReview(review))
+        {
+            ModelState.AddModelError("", "Something went wrong while deleting.");
+            return StatusCode(500, ModelState);
+        }
+
+        return Ok("Successfully Deleted");
+    }
+    
+    [HttpDelete("{reviewTitle}/deleteReviews")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public IActionResult DeleteReviews(string reviewTitle )
+    {
+        var reviews = _reviewRepository
+            .GetReviews()
+            .Where(review => review.Title.ToLower() == reviewTitle.ToLower())
+            .ToList();
+        ;
+        if (reviews == null)
+        {
+            return NotFound(ModelState);
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+        
+        if (!_reviewRepository.DeleteReviews(reviews))
+        {
+            ModelState.AddModelError("", "Something went wrong while deleting.");
+            return StatusCode(500, ModelState);
+        }
+
+        return Ok("Successfully Deleted");
+    }
+    
 }
