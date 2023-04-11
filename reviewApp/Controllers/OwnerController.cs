@@ -12,12 +12,19 @@ namespace reviewApp.Controllers;
 public class OwnerController : Controller
 {
     private readonly IOwnerRepository _ownerRepository;
+    private readonly ICountryRepository _countryRepository;
     private readonly IPokemonRepository _pokemonRepository;
     private readonly IMapper _mapper;
 
-    public OwnerController(IOwnerRepository ownerRepository, IPokemonRepository pokemonRepository, IMapper mapper)
+    public OwnerController(
+        IOwnerRepository ownerRepository,
+        ICountryRepository countryRepository,
+        IPokemonRepository pokemonRepository,
+        IMapper mapper
+        )
     {
         _ownerRepository = ownerRepository;
+        _countryRepository = countryRepository;
         _pokemonRepository = pokemonRepository;
         _mapper = mapper;
     }
@@ -90,6 +97,118 @@ public class OwnerController : Controller
         }
 
         return Ok(pokemon);
+    }
+    
+    [HttpPost]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    public IActionResult CreateOwner([FromQuery] int countryId, [FromBody] OwnerDto ownerCreate )
+    {
+        if ( ownerCreate == null)
+        {
+            return BadRequest();
+        }
+        
+        // ReSharper disable once ReplaceWithSingleCallToFirstOrDefault
+        var owner = _ownerRepository.GetOwners()
+            .Where(item =>
+                (item.LastName.Trim().ToLower() == ownerCreate.LastName.Trim().ToLower()
+                 && 
+                 item.FirstName == ownerCreate.FirstName))
+            .FirstOrDefault();
+        if ( owner != null) 
+        {
+            ModelState.AddModelError("", "Owner already exists");
+            return StatusCode(442, ModelState);
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+
+        var ownerMap = _mapper.Map<Owner>(ownerCreate);
+        ownerMap.Country = _countryRepository.GetCountry(countryId);
+        if (!_ownerRepository.CreateOwner(ownerMap))
+        {
+            ModelState.AddModelError("", "Something went wrong while saving");
+            return StatusCode(500, ModelState);
+        }
+
+        return Ok("Successfully created");
+    }
+    
+    [HttpPut("{ownerId}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public IActionResult UpdateOwner(int ownerId, [FromQuery] int countryId, [FromBody] OwnerDto ownerUpdate )
+    {
+        if ( ownerUpdate == null)
+        {
+            return BadRequest(ModelState);
+        }
+
+        if (ownerId != ownerUpdate.Id)
+        {
+            return BadRequest(ModelState);
+
+        }
+        ;
+        if ( !_ownerRepository.OwnerExisting(ownerId))
+        {
+            return NotFound();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+        
+
+        var ownerMap = _mapper.Map<Owner>(ownerUpdate);
+        ownerMap.Country = _countryRepository.GetCountry(countryId);
+        if (!_ownerRepository.UpdateOwner(ownerMap))
+        {
+            ModelState.AddModelError("", "Something went wrong while updating.");
+            return StatusCode(500, ModelState);
+        }
+
+        return Ok("Successfully Updated");
+    }
+    
+    [HttpDelete("{ownerId}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public IActionResult DeleteCategory(int ownerId )
+    {
+        var owner = _ownerRepository
+            .GetOwners()
+            .Where(owner1 => owner1.Id == ownerId)
+            .FirstOrDefault();
+        ;
+        if (owner == null)
+        {
+            return NotFound(ModelState);
+        }            
+        if ( !_ownerRepository.OwnerExisting(ownerId))
+        {
+            return NotFound(ModelState);
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+        
+        if (!_ownerRepository.DeleteOwner(owner))
+        {
+            ModelState.AddModelError("", "Something went wrong while deleting.");
+            return StatusCode(500, ModelState);
+        }
+
+        return Ok("Successfully Deleted");
     }
     
 }

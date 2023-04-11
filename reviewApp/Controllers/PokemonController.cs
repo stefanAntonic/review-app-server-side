@@ -72,4 +72,111 @@ public class PokemonController : Controller
 
         return Ok(Math.Round(rating, 2));
     }
+    [HttpPost]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    public IActionResult CreatePokemon([FromQuery] int ownerId, int categoryId, [FromBody] PokemonDto pokemonCreate )
+    {
+        Console.WriteLine(pokemonCreate);
+        if ( pokemonCreate == null)
+        {
+            return BadRequest();
+        }
+
+        // ReSharper disable once ReplaceWithSingleCallToFirstOrDefault
+        var pokemon = _pokemonRepository.GetPokemons()
+            .Where(item => item.Name.Trim().ToLower() == pokemonCreate.Name.Trim().ToLower())
+            .FirstOrDefault();
+        if ( pokemon != null) 
+        {
+            ModelState.AddModelError("", "Category already exists");
+            return StatusCode(442, ModelState);
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+
+        var pokemonMap = _mapper.Map<Pokemon>(pokemonCreate);
+        if (!_pokemonRepository.CreatePokemon(ownerId, categoryId, pokemonMap))
+        {
+            ModelState.AddModelError("", "Something went wrong while saving");
+            return StatusCode(500, ModelState);
+        }
+
+        return Ok("Successfully created");
+    }
+    
+    [HttpPut("{pokeId}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public IActionResult UpdateOwner(int pokeId, [FromBody] PokemonDto pokemonUpdate )
+    {
+        if ( pokemonUpdate == null)
+        {
+            return BadRequest(ModelState);
+        }
+
+        if (pokeId != pokemonUpdate.Id)
+        {
+            return BadRequest(ModelState);
+
+        }
+        ;
+        if ( !_pokemonRepository.PokemonExists(pokeId))
+        {
+            return NotFound();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+        
+
+        var pokemonMap = _mapper.Map<Pokemon>(pokemonUpdate);
+        if (!_pokemonRepository.UpDatePokemon(pokemonMap))
+        {
+            ModelState.AddModelError("", "Something went wrong while updating.");
+            return StatusCode(500, ModelState);
+        }
+
+        return Ok("Successfully Updated");
+    }
+    
+    [HttpDelete("{pokeId}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public IActionResult DeleteCategory(int pokeId )
+    {
+        var pokemon = _pokemonRepository
+            .GetPokemons()
+            .Where(poke => poke.Id == pokeId)
+            .FirstOrDefault();
+        ;
+        if (pokemon == null)
+        {
+            return NotFound(ModelState);
+        }            
+        if ( !_pokemonRepository.PokemonExists(pokeId))
+        {
+            return NotFound(ModelState);
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+        
+        if (!_pokemonRepository.DeletePokemon(pokemon))
+        {
+            ModelState.AddModelError("", "Something went wrong while deleting.");
+            return StatusCode(500, ModelState);
+        }
+
+        return Ok("Successfully Deleted");
+    }
 }
