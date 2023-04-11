@@ -112,7 +112,7 @@ public class ReviewController : Controller
     [ProducesResponseType(204)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
-    public IActionResult UpdateReview(int reviewId, [FromBody] PokemonDto reviewUpdate )
+    public IActionResult UpdateReview(int reviewId, [FromBody] ReviewDto reviewUpdate )
     {
         if ( reviewUpdate == null)
         {

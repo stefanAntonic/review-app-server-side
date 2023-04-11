@@ -109,6 +109,75 @@ public class ReviewerController : Controller
 
         return Ok("Successfully created");
     }
+    
+    [HttpPut("{reviewerId}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public IActionResult UpdateReviewer(int reviewerId, [FromBody] PokemonDto reviewerUpdate )
+    {
+        if ( reviewerUpdate == null)
+        {
+            return BadRequest(ModelState);
+        }
 
+        if (reviewerId != reviewerUpdate.Id)
+        {
+            return BadRequest(ModelState);
 
+        }
+        ;
+        if ( !_reviewerRepository.ReviewerExists(reviewerId))
+        {
+            return NotFound();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+        
+
+        var reviewerMap = _mapper.Map<Reviewer>(reviewerUpdate);
+        if (!_reviewerRepository.UpdateReviewer(reviewerMap))
+        {
+            ModelState.AddModelError("", "Something went wrong while updating.");
+            return StatusCode(500, ModelState);
+        }
+
+        return Ok("Successfully Updated");
+    }
+    
+    [HttpDelete("{reviewerId}")]
+    [ProducesResponseType(204)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(404)]
+    public IActionResult DeleteReview(int reviewerId )
+    {
+        var reviewer = _reviewerRepository
+            .GetReviewer(reviewerId);
+        ;
+        if (reviewer == null)
+        {
+            return NotFound(ModelState);
+        }            
+        if ( !_reviewerRepository.ReviewerExists(reviewerId))
+        {
+            return NotFound(ModelState);
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest();
+        }
+        
+        if (!_reviewerRepository.DeleteReviewer(reviewer))
+        {
+            ModelState.AddModelError("", "Something went wrong while deleting.");
+            return StatusCode(500, ModelState);
+        }
+
+        return Ok("Successfully Deleted");
+    }
+    
 }
