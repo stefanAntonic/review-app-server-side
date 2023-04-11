@@ -80,7 +80,19 @@ public class PokemonRepository : IPokemonRepository
         _context.Add(pokemonCategory);
         return Save();
         
-    }   
+    }
+
+    public bool UpDatePokemon(Pokemon pokemon)
+    {
+        _context.Update(pokemon);
+        return Save();
+    }
+
+    public bool DeletePokemon(Pokemon pokemon)
+    {
+        _context.Remove(pokemon);
+        return Save();
+    }
 
     public bool Save()
     {
